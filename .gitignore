@@ -1,0 +1,32 @@
+# Ignore indicator scripts and data
+indic.txt
+nq_ai_indicator_v6.pine
+
+# Ignore trading logs and recommendations
+trading_logs/
+trading_recommendations/
+
+# Ignore uploads and user-generated images
+uploads/
+static/user_uploads/
+
+# Ignore model files and caches
+market_data_cache/
+trading_models/
+
+# Ignore Python cache and logs
+__pycache__/
+*.pyc
+*.pyo
+*.log
+
+# Ignore images not part of source
+*.png
+
+# Allow essential files
+!README.md
+!app.py
+!nqbot.py
+!requirements.txt
+!templates/
+!static/style.css

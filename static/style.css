@@ -1,0 +1,651 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #1a1a1a; /* Dark background */
+    color: #f0f0f0; /* Light text for contrast */
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.container {
+    background-color: #2c2c2c; /* Slightly lighter dark shade for container */
+    color: #f0f0f0; /* Ensure text inside container is light */
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    max-width: 950px;
+    margin: 20px auto;
+    border: 1px solid #444; /* Subtle border, ensure dark */
+}
+
+h1 {
+    text-align: center;
+    color: #ffd700; /* Yellow for headings */
+    margin-bottom: 35px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+form {
+    margin-bottom: 25px; /* Added space below the form */
+}
+
+form label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #e0e0e0; /* Lighter gray for labels */
+}
+
+form input[type="file"],
+form input[type="text"],
+form select,
+form textarea {
+    width: calc(100% - 24px);
+    padding: 12px;
+    margin-bottom: 18px;
+    border: 1px solid #555; /* Darker border for inputs */
+    border-radius: 5px;
+    background-color: #3d3d3d; /* Dark background for inputs */
+    color: #f0f0f0; /* Light text for inputs */
+    font-size: 1em;
+}
+
+form input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+form button {
+    background-color: #ffd700; /* Yellow for buttons */
+    color: #1a1a1a; /* Dark text on yellow button */
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.05em;
+    font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #e6c300; /* Darker yellow on hover */
+    color: #000;
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #555; /* Darker border for tabs */
+}
+
+.tab-button {
+    padding: 12px 22px;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    color: #aaa; /* Lighter gray for inactive tab text */
+    font-size: 1.05em;
+    border-bottom: 3px solid transparent;
+    transition: color 0.3s ease, border-bottom-color 0.3s ease;
+}
+
+.tab-button.active {
+    color: #ffd700; /* Yellow for active tab text */
+    border-bottom: 3px solid #ffd700; /* Yellow border for active tab */
+    font-weight: 600;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.5s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.analysis-section {
+    background-color: #252525; /* Darker background for analysis sections */
+    padding: 18px;
+    margin-bottom: 22px;
+    border-radius: 6px;
+    border: 1px solid #404040;
+}
+
+.analysis-section h2 {
+    margin-top: 0;
+    color: #ffd700; /* Yellow for section titles */
+    border-bottom: 1px solid #555; /* Darker border */
+    padding-bottom: 8px;
+    font-size: 1.3em;
+    font-weight: 500;
+}
+
+.analysis-section p,
+.analysis-section ul {
+    margin-bottom: 12px;
+    font-size: 0.95em;
+}
+
+.analysis-section ul {
+    padding-left: 22px;
+}
+
+.error-message {
+    color: #ff6b6b; /* Red for error text */
+    background-color: rgba(255, 107, 107, 0.15); /* Darker, less prominent background */
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 22px;
+    border: 1px solid #ff6b6b;
+}
+
+.status-message {
+    color: #f9ca24; /* Yellow for status text */
+    background-color: rgba(249, 202, 36, 0.15); /* Darker, less prominent background */
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 22px;
+    border: 1px solid #f9ca24;
+}
+
+.chart-image-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.chart-image {
+    max-width: 100%;
+    max-height: 400px; /* Control max height */
+    height: auto;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    border: 3px solid #555; /* Darker border for chart image */
+    object-fit: contain; /* Ensures image is scaled correctly */
+}
+
+pre.json-output {
+    background-color: #101010; /* Even darker for JSON output */
+    color: #ccc; /* Light gray for JSON text */
+    padding: 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre-wrap; /* Ensures JSON is expanded and wraps */
+    word-wrap: break-word;
+    font-size: 0.9em;
+    line-height: 1.5;
+    border: 1px solid #444;
+    margin-top: 0;
+}
+
+.collapsible-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    transition: background-color 0.2s;
+}
+
+.collapsible-header:hover {
+    background-color: #333;
+}
+
+.toggle-icon {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #ffd700;
+    margin-left: 10px;
+}
+
+.collapsible-content {
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+}
+
+.collapsible-content.hidden {
+    display: none;
+}
+
+/* Sentiment-based coloring */
+.sentiment-bullish {
+    color: #2ecc71 !important; /* Green for bullish */
+    font-weight: bold;
+}
+
+.sentiment-bearish {
+    color: #e74c3c !important; /* Red for bearish */
+    font-weight: bold;
+}
+
+.sentiment-neutral {
+    color: #f1c40f !important; /* Yellow for neutral - kept as is, good choice */
+    font-weight: bold;
+}
+
+.sentiment-buy, .sentiment-long {
+    color: #2ecc71 !important; /* Green for buy/long */
+    font-weight: bold;
+}
+
+.sentiment-sell, .sentiment-short {
+    color: #e74c3c !important; /* Red for sell/short */
+    font-weight: bold;
+}
+
+.sentiment-hold {
+    color: #3498db !important; /* Blue for hold */
+    font-weight: bold;
+}
+
+.output-block {
+    background-color: #333333; /* Dark gray for output blocks */
+    padding: 0;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #484848;
+}
+
+.output-block h3 {
+    margin-top: 0;
+    font-size: 1.15em;
+    color: #ffd700; /* Yellow for block titles */
+    margin-bottom: 0;
+    padding: 12px 15px;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #444;
+}
+
+.output-block p {
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin-bottom: 5px;
+    padding: 0 15px;
+}
+
+.key-value-pair {
+    margin-bottom: 6px;
+    font-size: 0.95em;
+}
+
+.key-value-pair strong {
+    color: #bdc3c7;
+    margin-right: 5px;
+}
+
+/* Loading spinner */
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    background-color: rgba(255, 215, 0, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    margin: 30px 0;
+}
+
+.loader {
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-top: 5px solid #ffd700; /* Yellow to match theme */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.processing-details {
+    color: #ffd700;
+    font-size: 0.9em;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+/* Settings Tab Styles */
+.settings-form {
+    padding: 10px;
+}
+
+.settings-group {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #333;
+    border-radius: 6px;
+}
+
+.settings-group h3 {
+    color: #ffd700;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+}
+
+.empty-state {
+    color: #888;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* History Tab Styles */
+.history-list {
+    margin-top: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    form input[type="file"],
+    form input[type="text"],
+    form select,
+    form textarea {
+        padding: 10px;
+    }
+    form button {
+        padding: 10px 20px;
+    }
+    .tabs {
+        flex-direction: column;
+    }
+    .tab-button {
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        margin-bottom: 5px;
+    }
+    .tab-button.active {
+        border-bottom: 3px solid #ffd700; /* Yellow to match theme */
+    }
+}
+
+/* Add more specific styles as needed */
+
+/* Tab content - default hidden */
+.tab-content {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid #555; /* Darker border for dark theme */
+}
+
+/* Active tab should be visible */
+.tab-content.active {
+    display: block;
+}
+
+/* History Tab Styles */
+.history-filters {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.history-filters label {
+    font-weight: bold;
+}
+
+.history-filters select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.history-item {
+    background-color: #404040; /* Dark background */
+    border: 1px solid #555;    /* Dark border */
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Adjusted shadow */
+    color: #f0f0f0; /* Light text for content inside item */
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #555; /* Dark border */
+}
+
+.history-date, .history-ticker, .history-timeframe {
+    font-size: 0.9em;
+    color: #bbb; /* Lighter text for dark background */
+}
+
+.history-trend {
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.history-item-content {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.history-thumbnail {
+    max-width: 150px;
+    max-height: 100px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid #666; /* Darker border */
+}
+
+.history-details p {
+    margin: 5px 0;
+    font-size: 0.95em;
+}
+
+.view-details-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+.view-details-btn:hover {
+    background-color: #0056b3;
+}
+
+.empty-state {
+    color: #777;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* Settings Tab Styles */
+.settings-section .form-group {
+    margin-bottom: 20px;
+}
+
+.settings-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.settings-section input[type="text"],
+.settings-section select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+
+body.theme-dark {
+    background-color: #2c2c2c; /* Darker background */
+    color: #f0f0f0; /* Lighter text */
+}
+
+body.theme-dark .container {
+    background-color: #383838; /* Slightly lighter container background */
+    border-color: #555;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
+body.theme-dark h1, body.theme-dark h2, body.theme-dark h3 {
+    color: #e0e0e0;
+}
+
+body.theme-dark .tabs .tab-button {
+    background-color: #444;
+    color: #e0e0e0;
+    border-bottom: 3px solid transparent;
+}
+
+body.theme-dark .tabs .tab-button.active {
+    border-bottom-color: #007bff;
+    color: #fff;
+}
+
+body.theme-dark .form-group label {
+    color: #ccc;
+}
+
+body.theme-dark input[type="text"],
+body.theme-dark input[type="file"],
+body.theme-dark select,
+body.theme-dark textarea {
+    background-color: #555;
+    color: #f0f0f0;
+    border-color: #666;
+}
+
+body.theme-dark input[type="checkbox"] + label {
+    color: #ccc;
+}
+
+body.theme-dark .submit-button {
+    background-color: #007bff;
+    color: white;
+}
+body.theme-dark .submit-button:hover {
+    background-color: #0056b3;
+}
+
+body.theme-dark .error-message {
+    background-color: #5a2d2d;
+    border-left-color: #c00;
+    color: #f0c0c0;
+}
+
+body.theme-dark .results .output-block {
+    background-color: #404040;
+    border-color: #555;
+}
+
+body.theme-dark .key-value-pair strong {
+    color: #b0b0b0;
+}
+
+body.theme-dark .sentiment-bullish { background-color: #2a4a2a; color: #a0d0a0; }
+body.theme-dark .sentiment-bearish { background-color: #5a2d2d; color: #f0c0c0; }
+body.theme-dark .sentiment-neutral { background-color: #4a4a4a; color: #c0c0c0; }
+body.theme-dark .sentiment-buy { background-color: #2a4a2a; color: #a0d0a0; }
+body.theme-dark .sentiment-sell { background-color: #5a2d2d; color: #f0c0c0; }
+body.theme-dark .sentiment-hold { background-color: #4a4a4a; color: #c0c0c0; }
+
+body.theme-dark .history-item {
+    background-color: #404040 !important;
+    border-color: #555 !important;
+    color: #f0f0f0 !important; /* Ensure text is light */
+}
+
+body.theme-dark .history-item-header {
+    border-bottom-color: #555;
+}
+
+body.theme-dark .history-date, 
+body.theme-dark .history-ticker, 
+body.theme-dark .history-timeframe {
+    color: #bbb;
+}
+
+body.theme-dark .history-thumbnail {
+    border-color: #666;
+}
+
+body.theme-dark .view-details-btn {
+    background-color: #007bff;
+}
+body.theme-dark .view-details-btn:hover {
+    background-color: #0056b3;
+}
+
+body.theme-dark .empty-state {
+    color: #aaa;
+}
+
+body.theme-dark .settings-section input[type="text"],
+body.theme-dark .settings-section select {
+    background-color: #555;
+    color: #f0f0f0;
+    border-color: #666;
+}
+
+/* Ensure tab content is hidden by default and active is shown */
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+
+/* Fix for checkbox label alignment in dark theme */
+body.theme-dark .form-group.checkbox-group label {
+    color: #ccc;
+}
+
+/* Fix for select dropdown in dark theme */
+body.theme-dark select option {
+    background-color: #555; /* Background of options */
+    color: #f0f0f0; /* Text color of options */
+}
+
+/* Ensure loader is visible on dark theme */
+body.theme-dark .loader {
+    border-top: 8px solid #007bff; /* Blue to match buttons */
+    border-right: 8px solid #555; /* Darker grey */
+    border-bottom: 8px solid #555;
+    border-left: 8px solid #555;
+}
+
+body.theme-dark .status-message, body.theme-dark .processing-details {
+    color: #ccc;
+}

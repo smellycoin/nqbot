@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NQ Trading Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="description" content="Advanced NQ chart analysis tool with pattern recognition and liquidity detection">
+</head>
+<body class="theme-dark">
+    <div class="container">
+        <h1>NQ Chart Analysis</h1>
+
+        <div class="tabs">
+            <button class="tab-button" onclick="openTab(event, 'analysisTab')">New Analysis</button>
+            <button class="tab-button" onclick="openTab(event, 'historyTab')">Analysis History</button>
+            <button class="tab-button" onclick="openTab(event, 'settingsTab')">Settings</button>
+        </div>
+
+        <!-- New Analysis Tab -->
+        <div id="analysisTab" class="tab-content">
+            <form method="POST" enctype="multipart/form-data" action="{{ url_for('index', session_id=session_id) }}">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="chart_image">Upload Chart Image:</label>
+                        <input type="file" name="chart_image" id="chart_image" accept="image/*" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ticker">Ticker:</label>
+                        <input type="text" name="ticker" id="ticker" value="{{ form_data.get('ticker', 'NQ') }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="timeframe">Timeframe:</label>
+                        <select name="timeframe" id="timeframe">
+                            <option value="1m" {% if form_data.get('timeframe') == '1m' %}selected{% endif %}>1 Minute</option>
+                            <option value="5m" {% if form_data.get('timeframe') == '5m' %}selected{% endif %}>5 Minutes</option>
+                            <option value="15m" {% if form_data.get('timeframe') == '15m' %}selected{% endif %}>15 Minutes</option>
+                            <option value="1h" {% if form_data.get('timeframe') == '1h' or not form_data.get('timeframe') %}selected{% endif %}>1 Hour</option>
+                            <option value="4h" {% if form_data.get('timeframe') == '4h' %}selected{% endif %}>4 Hours</option>
+                            <option value="1d" {% if form_data.get('timeframe') == '1d' %}selected{% endif %}>1 Day</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-full-width">
+                        <label for="user_context">User Context (Optional):</label>
+                        <textarea name="user_context" id="user_context" rows="3">{{ form_data.get('user_context', '') }}</textarea>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="use_llm" id="use_llm" value="true" {% if form_data.get('use_llm', true) %}checked{% endif %}>
+                        <label for="use_llm">Use LLM for Advanced Insights</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="llm_model">LLM Model (if LLM enabled):</label>
+                        <input type="text" name="llm_model" id="llm_model" value="{{ form_data.get('llm_model', 'gpt2') }}">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="use_market_data" id="use_market_data" value="true" {% if form_data.get('use_market_data', true) %}checked{% endif %}>
+                        <label for="use_market_data">Incorporate Real-time Market Data</label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" name="extra_tips" id="extra_tips" value="true" {% if form_data.get('extra_tips', true) %}checked{% endif %}>
+                        <label for="extra_tips">Provide Enhanced Trading Tips</label>
+                    </div>
+                </div>
+                <button type="submit" class="submit-button">Analyze Chart</button>
+            </form>
+
+            {% if processing %}
+            <div class="loader-container">
+                <div class="loader"></div>
+                <p class="status-message">Analysis in progress... Please wait.</p>
+                <p class="processing-details">Processing chart image and detecting patterns...</p>
+            </div>
+            {% endif %}
+
+            {% if error_message %}
+                <div class="error-message">
+                    <h2>Error</h2>
+                    <p>{{ error_message }}</p>
+                </div>
+            {% endif %}
+
+            {% if analysis_result %}
+            <div class="analysis-section results">
+                <h2>Analysis Results</h2>
+
+                {% if analysis_result.image_path %}
+                <div class="chart-image-container output-block">
+                    <h3>Uploaded Chart</h3>
+                    <img src="{{ url_for('static', filename=analysis_result.image_path) }}" alt="Uploaded Chart - If broken, check backend: analysis_result.image_path" class="chart-image">
+                </div>
+                {% endif %}
+
+                <div class="output-block">
+                    <h3>Summary</h3>
+                    <p class="key-value-pair"><strong>Ticker:</strong> {{ analysis_result.ticker }}</p>
+                    <p class="key-value-pair"><strong>Timeframe:</strong> {{ analysis_result.timeframe }}</p>
+                    {% if analysis_result.analysis %}
+                    <p class="key-value-pair"><strong>Overall Trend:</strong> <span class="sentiment-{{ analysis_result.analysis.trend.lower() if analysis_result.analysis.trend else 'neutral' }}">{{ analysis_result.analysis.trend | title }}</span></p>
+                    <p class="key-value-pair"><strong>Confidence:</strong> {{ "%.1f" % (analysis_result.analysis.confidence * 100) }}%</p>
+                    <p class="key-value-pair"><strong>Recommendation:</strong> <span class="sentiment-{{ analysis_result.analysis.recommendation.lower() if analysis_result.analysis.recommendation else 'hold' }}">{{ analysis_result.analysis.recommendation | upper }}</span></p>
+                    {% endif %}
+                </div>
+
+                {% if analysis_result.analysis and analysis_result.analysis.pattern %}
+                <div class="output-block">
+                    <h3>Pattern Analysis</h3>
+                    <p class="key-value-pair"><strong>Detected Pattern:</strong> {{ analysis_result.analysis.pattern.replace('_', ' ') | title }}</p>
+                    {% if analysis_result.analysis.description %}
+                    <p class="key-value-pair"><strong>Description:</strong> {{ analysis_result.analysis.description }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if analysis_result.liquidity %}
+                <div class="output-block">
+                    <h3>Liquidity Zones</h3>
+                    {# The following lines are commented out as 'upper_liquidity' and 'lower_liquidity' are not directly in README's liquidity structure #}
+                    {# <p class="key-value-pair"><strong>Upper Liquidity:</strong> {{ 'Yes' if analysis_result.liquidity.upper_liquidity else 'No' }}</p> #}
+                    {# <p class="key-value-pair"><strong>Lower Liquidity:</strong> {{ 'Yes' if analysis_result.liquidity.lower_liquidity else 'No' }}</p> #}
+                    {% if analysis_result.liquidity.confidence is defined %}
+                    <p class="key-value-pair"><strong>Confidence:</strong> {{ "%.1f" % (analysis_result.liquidity.confidence * 100) }}%</p>
+                    {% endif %}
+                    {% if analysis_result.liquidity.zones %}
+                        <p><strong>Detected Zones:</strong></p>
+                        <ul class="zones-list">
+                        {% for zone in analysis_result.liquidity.zones %}
+                            <li class="zone-item {{ zone.type }}-zone">{{ zone.type | title }} at {{ zone.position }} (Strength: {{ "%.2f" % zone.strength }})</li> {# Changed zone.level to zone.position #}
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if analysis_result.analysis and analysis_result.analysis.key_levels %}
+                <div class="output-block">
+                    <h3>Key Levels</h3>
+                    <ul class="key-levels-list">
+                    {# Assuming key_levels is a list of strings or simple values directly displayable #}
+                    {% for level_item in analysis_result.analysis.key_levels %}
+                        <li class="level-item">{{ level_item }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if analysis_result and analysis_result.llm_insight %}
+                <div class="output-block">
+                    <h3>Advanced Trading Insight (LLM)</h3>
+                    <div class="insight-content">{{ analysis_result.llm_insight | safe }}</div>
+                </div>
+                {% endif %}
+
+                {% if analysis_result and analysis_result.enhanced_tips %}
+                <div class="output-block">
+                    <h3>Enhanced Trading Tips</h3>
+                    <div class="tips-content">
+                        {% if analysis_result.enhanced_tips is mapping %}
+                            <ul class="enhanced-tips-list">
+                                {% for key, value in analysis_result.enhanced_tips.items() %}
+                                    <li class="tip-category">
+                                        <strong>{{ key.replace('_', ' ') | title }}:</strong>
+                                        {% if value is mapping %}
+                                            <ul class="tip-details">
+                                            {% for sub_key, sub_value in value.items() %}
+                                                <li>
+                                                    <em>{{ sub_key.replace('_', ' ') | title }}:</em>
+                                                    {% if sub_value is iterable and not sub_value is string and not sub_value is mapping %}
+                                                        {{ sub_value | join(', ') }}
+                                                    {% elif sub_value is mapping %}
+                                                        {# Handle nested dicts if necessary, e.g. for entry_points #}
+                                                        <ul class="nested-tip-details">
+                                                            {% for n_key, n_value in sub_value.items() %}
+                                                                <li><em>{{ n_key.replace('_', ' ') | title }}:</em> {{ n_value }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        {{ sub_value }}
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                            </ul>
+                                        {% elif value is iterable and not value is string %}
+                                            {{ value | join(', ') }}
+                                        {% else %}
+                                            {{ value }}
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% elif analysis_result.enhanced_tips %}
+                            {# Fallback for non-dict, non-empty content #}
+                            <p>{{ analysis_result.enhanced_tips | safe }}</p>
+                        {% else %}
+                            <p>No enhanced tips available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="output-block">
+                    <h3 class="collapsible-header">Raw JSON Output <span class="toggle-icon">+</span></h3>
+                    <div class="collapsible-content hidden">
+                        <pre class="json-output">{{ analysis_result | tojson(indent=2) }}</pre>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Analysis History Tab -->
+        <div id="historyTab" class="tab-content" style="display:none;">
+            <div class="analysis-section">
+                <h2>Analysis History</h2>
+                <div class="history-filters">
+                    <label for="history-filter">Filter by:</label>
+                    <select id="history-filter">
+                        <option value="all">All Analyses</option>
+                        <option value="bullish">Bullish Signals</option>
+                        <option value="bearish">Bearish Signals</option>
+                        <option value="today">Today Only</option>
+                        <option value="week">This Week</option>
+                    </select>
+                </div>
+                <div class="history-list" id="history-list-container">
+                    <!-- History items will be loaded here by JavaScript -->
+                    <p class="empty-state">Loading history or no analyses found...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settingsTab" class="tab-content" style="display:none;">
+            <div class="settings-section">
+                <h2>Settings</h2>
+                <div class="form-group">
+                    <label for="default_ticker">Default Ticker:</label>
+                    <input type="text" id="default_ticker" name="default_ticker" value="NQ">
+                </div>
+                <div class="form-group">
+                    <label for="default_timeframe">Default Timeframe:</label>
+                    <select id="default_timeframe" name="default_timeframe">
+                        <option value="1m">1 Minute</option>
+                        <option value="5m">5 Minutes</option>
+                        <option value="15m">15 Minutes</option>
+                        <option value="1h">1 Hour</option>
+                        <option value="4h">4 Hours</option>
+                        <option value="1d">1 Day</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ui_theme">UI Theme:</label>
+                    <select id="ui_theme" name="ui_theme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <button onclick="saveSettings()" class="submit-button">Save Settings</button>
+                <p id="settings-saved-message" style="display:none; color: green; margin-top: 10px;">Settings saved!</p>
+            </div>
+        </div>
+        <div id="settingsTab" class="tab-content">
+            <div class="analysis-section">
+                <h2>Settings</h2>
+                <form id="settings-form" class="settings-form">
+                    <div class="settings-group">
+                        <h3>Default Analysis Parameters</h3>
+                        <label for="default_ticker">Default Ticker:</label>
+                        <input type="text" id="default_ticker" name="default_ticker" value="NQ">
+                        
+                        <label for="default_timeframe">Default Timeframe:</label>
+                        <select id="default_timeframe" name="default_timeframe">
+                            <option value="1m">1 Minute</option>
+                            <option value="5m">5 Minutes</option>
+                            <option value="15m">15 Minutes</option>
+                            <option value="1h" selected>1 Hour</option>
+                            <option value="4h">4 Hours</option>
+                            <option value="1d">1 Day</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3>Default Options</h3>
+                        <div class="checkbox-setting">
+                            <input type="checkbox" id="default_use_llm" name="default_use_llm" checked>
+                            <label for="default_use_llm">Use LLM by default</label>
+                        </div>
+                        <div class="checkbox-setting">
+                            <input type="checkbox" id="default_use_market_data" name="default_use_market_data" checked>
+                            <label for="default_use_market_data">Use market data by default</label>
+                        </div>
+                        <div class="checkbox-setting">
+                            <input type="checkbox" id="default_extra_tips" name="default_extra_tips" checked>
+                            <label for="default_extra_tips">Provide enhanced tips by default</label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Appearance</h3>
+                        <div class="checkbox-setting">
+                            <input type="checkbox" id="dark_mode" name="dark_mode">
+                            <label for="dark_mode">Dark Mode</label>
+                        </div>
+                        <div class="color-setting">
+                            <label for="accent_color">Accent Color:</label>
+                            <select id="accent_color" name="accent_color">
+                                <option value="yellow" selected>Yellow (Default)</option>
+                                <option value="blue">Blue</option>
+                                <option value="green">Green</option>
+                                <option value="purple">Purple</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="saveSettings()" class="submit-button">Save Settings</button>
+                </form>
+                <p id="settings-saved-message" class="success-message">Settings saved successfully!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        const currentSessionId = "{{ session_id | default('') }}";
+        const isProcessing = {{ processing | default(false, true) | tojson }};
+        const analysisResult = "{{ analysis_result | default('') }}";
+        const errorMessage = "{{ error_message | default('') }}";
+
+        // Tab functionality
+        function openTab(evt, tabName) {
+            // If opening history tab, fetch data
+            if (tabName === 'historyTab') {
+                fetchAnalysisHistory();
+            }
+            // If opening settings tab, load settings
+            if (tabName === 'settingsTab') {
+                loadSettings();
+            }
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            const tabElement = document.getElementById(tabName);
+            if (tabElement) {
+                tabElement.style.display = "block";
+                tabElement.classList.add("active");
+            }
+
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.classList.add("active");
+            } else { // Handle direct calls without event (e.g., on page load)
+                const currentTabButton = document.querySelector(`.tab-button[onclick*="'${tabName}'"`);
+                if (currentTabButton) {
+                    currentTabButton.classList.add("active");
+                }
+            }
+            localStorage.setItem('activeTab', tabName);
+        }
+
+        // Status checking for analysis processing
+        function checkStatus() {
+            if (!currentSessionId || currentSessionId === 'null') return;
+
+            fetch(`/status/${currentSessionId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.processing === false) {
+                        const currentAnalysisResultString = analysisResult === 'null' ? null : JSON.stringify(analysisResult);
+                        const currentErrorMessageString = errorMessage === 'null' ? null : errorMessage;
+
+                        const newAnalysisResultString = data.analysis_result ? JSON.stringify(data.analysis_result) : null;
+                        const newErrorMessageString = data.error_message ? data.error_message : null;
+
+                        let shouldReload = false;
+                        // Only reload if new data is present and different, not just on every poll
+                        if (newAnalysisResultString && currentAnalysisResultString !== newAnalysisResultString) {
+                            shouldReload = true;
+                        } else if (newErrorMessageString && currentErrorMessageString !== newErrorMessageString) {
+                            shouldReload = true;
+                        }
+                        // If both are null but previously had data, reload to clear
+                        if (!newAnalysisResultString && !newErrorMessageString && (currentAnalysisResultString || currentErrorMessageString)) {
+                            shouldReload = true;
+                        }
+
+                        if (shouldReload) {
+                            window.location.reload();
+                        } else {
+                            // No change in data, hide loader if it was visible due to direct page load while processing
+                            const loaderContainer = document.querySelector('.loader-container');
+                            if (loaderContainer) loaderContainer.style.display = 'none';
+                        }
+                    } else if (data.processing === true) {
+                        const loaderContainer = document.querySelector('.loader-container');
+                        if (loaderContainer) loaderContainer.style.display = 'flex';
+                        setTimeout(checkStatus, 3000); // Poll every 3 seconds
+                    } else if (data.error) {
+                        console.error("Error checking status:", data.error);
+                        const loaderContainer = document.querySelector('.loader-container');
+                        if (loaderContainer) loaderContainer.style.display = 'none'; 
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching analysis status:', error);
+                    const loaderContainer = document.querySelector('.loader-container');
+                    if (loaderContainer) loaderContainer.style.display = 'none'; 
+                });
+        }
+        
+        // Settings management
+        function loadSettings() {
+            // Load settings from localStorage
+            const defaultTicker = localStorage.getItem('defaultTicker') || 'NQ';
+            const defaultTimeframe = localStorage.getItem('defaultTimeframe') || '1h';
+            const defaultUseLLM = localStorage.getItem('defaultUseLLM') !== 'false';
+            const defaultUseMarketData = localStorage.getItem('defaultUseMarketData') !== 'false';
+            const defaultExtraTips = localStorage.getItem('defaultExtraTips') !== 'false';
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            const accentColor = localStorage.getItem('accentColor') || 'yellow';
+            
+            // Apply settings to form
+            document.getElementById('default_ticker').value = defaultTicker;
+            document.getElementById('default_timeframe').value = defaultTimeframe;
+            document.getElementById('default_use_llm').checked = defaultUseLLM;
+            document.getElementById('default_use_market_data').checked = defaultUseMarketData;
+            document.getElementById('default_extra_tips').checked = defaultExtraTips;
+            document.getElementById('dark_mode').checked = darkMode;
+            
+            if (document.getElementById('accent_color')) {
+                document.getElementById('accent_color').value = accentColor;
+            }
+            
+            // Apply settings to current form
+            const tickerInput = document.getElementById('ticker');
+            const timeframeSelect = document.getElementById('timeframe');
+            const useLLMCheckbox = document.getElementById('use_llm');
+            const useMarketDataCheckbox = document.getElementById('use_market_data');
+            const extraTipsCheckbox = document.getElementById('extra_tips');
+            
+            // Only set if not already set by server-side form data
+            if (tickerInput && !tickerInput.value) {
+                tickerInput.value = defaultTicker;
+            }
+            
+            if (timeframeSelect && !timeframeSelect.value) {
+                timeframeSelect.value = defaultTimeframe;
+            }
+            
+            if (useLLMCheckbox) {
+                useLLMCheckbox.checked = defaultUseLLM;
+            }
+            
+            if (useMarketDataCheckbox) {
+                useMarketDataCheckbox.checked = defaultUseMarketData;
+            }
+            
+            if (extraTipsCheckbox) {
+                extraTipsCheckbox.checked = defaultExtraTips;
+            }
+            
+            // Apply dark mode if enabled
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+            }
+            
+            // Apply accent color
+            document.body.setAttribute('data-accent', accentColor);
+        }
+        
+        function saveSettings() {
+            const defaultTicker = document.getElementById('default_ticker').value;
+            const defaultTimeframe = document.getElementById('default_timeframe').value;
+            const defaultUseLLM = document.getElementById('default_use_llm').checked;
+            const defaultUseMarketData = document.getElementById('default_use_market_data').checked;
+            const defaultExtraTips = document.getElementById('default_extra_tips').checked;
+            const darkMode = document.getElementById('dark_mode').checked;
+            const accentColor = document.getElementById('accent_color') ? 
+                               document.getElementById('accent_color').value : 'yellow';
+
+            localStorage.setItem('defaultTicker', defaultTicker);
+            localStorage.setItem('defaultTimeframe', defaultTimeframe);
+            localStorage.setItem('defaultUseLLM', defaultUseLLM);
+            localStorage.setItem('defaultUseMarketData', defaultUseMarketData);
+            localStorage.setItem('defaultExtraTips', defaultExtraTips);
+            localStorage.setItem('darkMode', darkMode);
+            localStorage.setItem('accentColor', accentColor);
+
+            // Apply dark mode immediately
+            document.body.classList.toggle('dark-mode', darkMode);
+            
+            // Apply accent color immediately
+            document.body.setAttribute('data-accent', accentColor);
+            
+            // Show saved message
+            const savedMessage = document.getElementById('settings-saved-message');
+            if (savedMessage) {
+                savedMessage.style.display = 'block';
+                setTimeout(() => {
+                    savedMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // History filtering
+        function filterHistory() {
+            const filter = document.getElementById('history-filter').value;
+            const historyItems = document.querySelectorAll('.history-item');
+            
+            historyItems.forEach(item => {
+                const trend = item.getAttribute('data-trend');
+                const date = new Date(item.getAttribute('data-date'));
+                const today = new Date();
+                const weekAgo = new Date();
+                weekAgo.setDate(today.getDate() - 7);
+                
+                let show = true;
+                
+                if (filter === 'bullish' && trend !== 'bullish') {
+                    show = false;
+                } else if (filter === 'bearish' && trend !== 'bearish') {
+                    show = false;
+                } else if (filter === 'today' && date.toDateString() !== today.toDateString()) {
+                    show = false;
+                } else if (filter === 'week' && date < weekAgo) {
+                    show = false;
+                }
+                
+                item.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings(); // Load settings on initial page load
+            applySettingsToForm(); // Apply loaded settings to the new analysis form
+            // Set default tab
+            document.querySelector('.tab-button').click(); // Click the first tab button
+
+            const historyFilter = document.getElementById('history-filter');
+            if(historyFilter) {
+                historyFilter.addEventListener('change', filterHistory);
+            }
+        });
+
+        function applySettingsToForm() {
+            const savedTicker = localStorage.getItem('default_ticker');
+            const savedTimeframe = localStorage.getItem('default_timeframe');
+
+            if (savedTicker && document.getElementById('ticker')) {
+                document.getElementById('ticker').value = savedTicker;
+            }
+            if (savedTimeframe && document.getElementById('timeframe')) {
+                document.getElementById('timeframe').value = savedTimeframe;
+            }
+        }
+
+        function fetchAnalysisHistory() {
+            const historyListContainer = document.getElementById('history-list-container');
+            if (!historyListContainer) return;
+            historyListContainer.innerHTML = '<p class="empty-state">Loading history...</p>';
+
+            fetch('/history')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        historyListContainer.innerHTML = `<p class="empty-state error-message">Error loading history: ${data.error}</p>`;
+                        return;
+                    }
+                    renderAnalysisHistory(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching analysis history:', error);
+                    historyListContainer.innerHTML = `<p class="empty-state error-message">Failed to load analysis history. ${error.message}</p>`;
+                });
+        }
+
+        function renderAnalysisHistory(historyData) {
+            const historyListContainer = document.getElementById('history-list-container');
+            if (!historyListContainer) return;
+
+            if (!historyData || historyData.length === 0) {
+                historyListContainer.innerHTML = '<p class="empty-state">No previous analyses found. Your completed analyses will appear here.</p>';
+                return;
+            }
+
+            historyListContainer.innerHTML = ''; // Clear previous content
+
+            historyData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by newest first
+
+            historyData.forEach(item => {
+                const trendLower = item.trend ? item.trend.toLowerCase() : 'neutral';
+                const recommendationLower = item.recommendation ? item.recommendation.toLowerCase() : 'hold';
+                const confidencePercent = item.confidence ? (parseFloat(item.confidence) * 100).toFixed(1) : 'N/A';
+                const imagePath = item.image_path ? `{{ url_for('static', filename='') }}${item.image_path.replace(/\\/g, '/')}` : '';
+
+                const historyItemDiv = document.createElement('div');
+                historyItemDiv.classList.add('history-item');
+                historyItemDiv.dataset.trend = trendLower;
+                historyItemDiv.dataset.date = item.timestamp;
+                historyItemDiv.dataset.ticker = item.ticker ? item.ticker.toLowerCase() : '';
+
+                let imageHtml = '';
+                if (item.image_path) {
+                    // Construct URL carefully, assuming item.image_path is like 'user_uploads/filename.png'
+                    const imageUrl = `{{ url_for('static', filename='') }}${item.image_path.replace(/\\/g, '/')}`;
+                    imageHtml = `<img src="${imageUrl}" alt="Chart for ${item.ticker}" class="history-thumbnail">`;
+                }
+
+                historyItemDiv.innerHTML = `
+                    <div class="history-item-header">
+                        <span class="history-date">${item.timestamp || 'N/A'}</span>
+                        <span class="history-ticker">${item.ticker || 'N/A'}</span>
+                        <span class="history-timeframe">${item.timeframe || 'N/A'}</span>
+                        <span class="history-trend sentiment-${trendLower}">${item.trend ? item.trend.charAt(0).toUpperCase() + item.trend.slice(1) : 'Neutral'}</span>
+                    </div>
+                    <div class="history-item-content">
+                        ${imageHtml}
+                        <div class="history-details">
+                            <p><strong>Recommendation:</strong> <span class="sentiment-${recommendationLower}">${item.recommendation ? item.recommendation.toUpperCase() : 'HOLD'}</span></p>
+                            <p><strong>Confidence:</strong> ${confidencePercent}%</p>
+                            ${item.pattern_details && item.pattern_details.pattern ? `<p><strong>Pattern:</strong> ${item.pattern_details.pattern.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>` : ''}
+                            <button class="view-details-btn" data-id="${item.id}" onclick="alert('Full analysis view not implemented yet for ID: ${item.id}')">View Full Analysis</button>
+                        </div>
+                    </div>
+                `;
+                historyListContainer.appendChild(historyItemDiv);
+            });
+        }
+
+        function filterHistory() {
+            const filterValue = document.getElementById('history-filter').value;
+            const items = document.querySelectorAll('#history-list-container .history-item');
+            const today = new Date().toISOString().split('T')[0];
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+            items.forEach(item => {
+                let show = true;
+                const itemTrend = item.dataset.trend;
+                const itemDateStr = item.dataset.date.split(' ')[0]; // Get YYYY-MM-DD part
+                const itemDate = new Date(itemDateStr);
+
+                if (filterValue === 'bullish' && itemTrend !== 'bullish') {
+                    show = false;
+                } else if (filterValue === 'bearish' && itemTrend !== 'bearish') {
+                    show = false;
+                } else if (filterValue === 'today' && itemDateStr !== today) {
+                    show = false;
+                } else if (filterValue === 'week' && itemDate < oneWeekAgo) {
+                    show = false;
+                }
+                item.style.display = show ? '' : 'none';
+            });
+        }
+
+        function saveSettings() {
+            const defaultTicker = document.getElementById('default_ticker').value;
+            const defaultTimeframe = document.getElementById('default_timeframe').value;
+            const uiTheme = document.getElementById('ui_theme').value;
+
+            localStorage.setItem('default_ticker', defaultTicker);
+            localStorage.setItem('default_timeframe', defaultTimeframe);
+            localStorage.setItem('ui_theme', uiTheme);
+
+            applyTheme(uiTheme);
+            applySettingsToForm(); // Re-apply to form in case it's visible
+
+            const messageElement = document.getElementById('settings-saved-message');
+            messageElement.style.display = 'block';
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 3000);
+        }
+
+        function loadSettings() {
+            const defaultTicker = localStorage.getItem('default_ticker') || 'NQ';
+            const defaultTimeframe = localStorage.getItem('default_timeframe') || '1h';
+            const uiTheme = localStorage.getItem('ui_theme') || 'light';
+
+            if(document.getElementById('default_ticker')) document.getElementById('default_ticker').value = defaultTicker;
+            if(document.getElementById('default_timeframe')) document.getElementById('default_timeframe').value = defaultTimeframe;
+            if(document.getElementById('ui_theme')) document.getElementById('ui_theme').value = uiTheme;
+            
+            applyTheme(uiTheme);
+        }
+
+        function applyTheme(theme) {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+            } else {
+                document.body.classList.add('theme-light');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize active tab
+            const savedTab = localStorage.getItem('activeTab') || 'analysisTab';
+            openTab(null, savedTab);
+
+            // Handle loading screen visibility and status check
+            const loaderContainer = document.querySelector('.loader-container');
+            if (isProcessing) {
+                if (loaderContainer) loaderContainer.style.display = 'flex';
+                setTimeout(checkStatus, 1000); // Initial check after 1 second
+            } else {
+                if (loaderContainer) loaderContainer.style.display = 'none';
+            }
+
+            // Collapsible JSON output
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('collapsible-header') || e.target.classList.contains('toggle-icon')) {
+                    const header = e.target.closest('.collapsible-header');
+                    if (!header) return;
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.toggle-icon');
+                    
+                    if (content && icon) {
+                        content.classList.toggle('hidden');
+                        icon.textContent = content.classList.contains('hidden') ? '+' : '-';
+                    }
+                }
+            });
+
+            // Settings form: Load and Save
+            loadSettings();
+            
+            // History filter
+            const historyFilter = document.getElementById('history-filter');
+            if (historyFilter) {
+                historyFilter.addEventListener('change', filterHistory);
+            }
+            
+            // View details buttons
+            const viewDetailsButtons = document.querySelectorAll('.view-details-btn');
+            viewDetailsButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const analysisId = this.getAttribute('data-id');
+                    window.location.href = `/view/${analysisId}`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
